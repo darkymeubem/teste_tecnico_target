@@ -1,37 +1,59 @@
 package teste3;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.Scanner;
 
 public class Program {
-
     public static void main(String[] args) {
-        // Caminho para o arquivoON
-        String filePath = "data.json";
+        try (InputStream inputStream = Program.class.getClassLoader().getResourceAsStream("numbers.json");
+             Scanner scanner = new Scanner(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            Locale.setDefault(new Locale("en", "US"));
+            // Lê o conteúdo do arquivo JSON
+            String jsonText = scanner.useDelimiter("\\A").next();
 
-        try {
-            // Ler o conteúdo do arquivo JSON
-            String content = new String(Files.readAllBytes(Paths.get(filePath)));
+            // Cria um JSONArray a partir do texto JSON
+            JSONArray jsonArray = new JSONArray(jsonText);
 
-            // Criar um JSONObject a partir do conteúdo do arquivo
-            JSONObject jsonObject = new JSONObject(content);
 
-            // Obter a lista de números do JSON
-            JSONArray numbersArray = jsonObject.getJSONArray("numbers");
-
-            // Converter os valores para inteiros e exibir
-            for (int i = 0; i < numbersArray.length(); i++) {
-                int number = numbersArray.getInt(i);
-                System.out.println("Número " + i + ": " + number);
+            int dia [] = new int[30];
+            double valor[] = new double[30];
+            int dias_uteis = 0;
+            double MAIOR_FATURAMENTO = 0;
+            double MENOR_FATURAMENTO = 1000000;
+            double MEDIA_FATURAMENTO = 0;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                dia[i] = jsonObject.getInt("dia");
+                valor[i] = jsonObject.getDouble("valor");
+                if(valor[i] != 0) {
+                    MEDIA_FATURAMENTO += valor[i];
+                    dias_uteis++;
+                }
+                if(MAIOR_FATURAMENTO < valor[i]){
+                    MAIOR_FATURAMENTO = valor[i];
+                }
+                if(MENOR_FATURAMENTO > valor[i]){
+                    MENOR_FATURAMENTO = valor[i];
+                }
+            }
+            int a = 0;
+            MEDIA_FATURAMENTO = MEDIA_FATURAMENTO/dias_uteis;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                if(valor[i] > MEDIA_FATURAMENTO){
+                    a++;
+                }
             }
 
-        } catch (IOException e) {
-            System.out.println("Erro ao ler o arquivo: " + e.getMessage());
+            System.out.printf("A média do faturamento mensal foi de R$%.2f, a quantidade de dias maiores que a média  foi de %d no total.\nO maior faturamento foi de R$%.2f e o menor faturamento foi de R$%.2f",MEDIA_FATURAMENTO,a,MAIOR_FATURAMENTO,MENOR_FATURAMENTO);
+
         } catch (Exception e) {
-            System.out.println("Erro ao processar o JSON: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
